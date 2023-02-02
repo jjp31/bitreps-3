@@ -1,4 +1,4 @@
-from main import JSON_DIRECTORY, OUTPUT_DIRECTORY
+from paths import JSON_DIRECTORY, OUTPUT_DIRECTORY
 from collections import Counter
 from pathlib import Path
 from scipy.stats import chi2
