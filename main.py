@@ -1,4 +1,4 @@
-from paths import INPUT_DIRECTORY, JSON_DIRECTORY, OUTPUT_DIRECTORY
+from paths import INPUT_DIRECTORY, JSON_DIRECTORY
 from bloom_filter2 import BloomFilter
 from collections import defaultdict
 from pathlib import Path
@@ -7,11 +7,17 @@ import argparse
 import json
 import os
 
-ALLOWED_BLOCKSIZES = [8, 16, 24, 32, 48, 64, 96, 128, 256, 512]
-
+ALLOWED_BLOCKSIZES = [8, 16, 24, 32, 48, 64, 96, 128, 256, 512]     # All blocksizes supported (in bits)
 
 
 def populate_bloom(blocks, err_rate, blocksize):
+    """
+    Create and populate Bloom filter based on user-specified parameters
+    :param blocks: A list of all blocks in input data in integer form
+    :param err_rate: Error rate of the Bloom filter (user-specified)
+    :param blocksize: User-specified blocksize over which to perform measurements
+    :return: Bloom filter populated with observed blocks, dictionary populated with block frequencies and metadata
+    """
     # Prepare intermediary JSON
     reps = {
         "hits": defaultdict(lambda: 0),
@@ -33,6 +39,12 @@ def populate_bloom(blocks, err_rate, blocksize):
     return bf, reps
 
 def get_blocks(fp, blocksize):
+    """
+    Gather and return all blocks in a file
+    :param fp: Path to input file
+    :param blocksize: User-specified size of collected blocks
+    :return: A list of all blocks in the input data in integer form
+    """
     blocks = []
     # Read file block by block until no blocks remain
     with open(fp, "rb") as f:
@@ -45,6 +57,10 @@ def get_blocks(fp, blocksize):
 
 
 def main():
+    """
+    Obtain and validate user input, read input data, create Bloom filter and write repetition data to a JSON file
+    :return: None
+    """
     # Get user input
     parser = argparse.ArgumentParser()
     parser.add_argument("fn", help="Name of file to measure")
