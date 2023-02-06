@@ -1,21 +1,20 @@
 from paths import JSON_DIRECTORY, OUTPUT_DIRECTORY
 from collections import Counter
-from pathlib import Path
 from scipy.stats import chi2
+from pathlib import Path
 import argparse
 import json
 import os
 
 
-def write_results(raw_exp_counts, raw_obs_counts, exp_counts, obs_counts, chisq, pval, ddof, fn):
+def write_results(raw_exp_counts, raw_obs_counts, exp_counts, obs_counts, chisq, ddof, fn):
     s1 = "Unmodified expected distribution: %s\n" % raw_exp_counts
     s2 = "Unmodified observed distribution: %s\n\n" % raw_obs_counts
     s3 = "Expected distribution used for chi-square calculation: %s\n" % exp_counts
     s4 = "Observed distribution used for chi-square calculation: %s\n\n" % obs_counts
     s5 = "Chi-square: %s\n" % chisq
-    s6 = "P-Value: %s\n" % pval
     s7 = "Degrees of Freedom: %s" % ddof
-    lines = [s1, s2, s3, s4, s5, s6, s7]
+    lines = [s1, s2, s3, s4, s5, s7]
     with open(os.path.join(OUTPUT_DIRECTORY, "%s.txt" % Path(fn).stem), "w") as f:
         for line in lines:
             f.write(line)
@@ -25,9 +24,7 @@ def calc_chisq(obs, exp):
     chisq = 0
     for i in range(len(obs)):
         chisq += ((obs[i] - exp[i]) ** 2) / exp[i]
-    ddof = len(obs) - 1
-    pval = chi2.sf(chisq, len(obs) - 1 - ddof)
-    return chisq, pval
+    return chisq
 
 
 def fix_buckets(input, model):
@@ -118,7 +115,7 @@ def main():
         model_freqs.append(v)
 
     # Perform chi-square calculation
-    chisq, pval = calc_chisq(input_freqs, model_freqs)
+    chisq = calc_chisq(input_freqs, model_freqs)
     ddof = len(model_counts_trimmed.items()) - 1
 
     # Print results to command line
@@ -127,7 +124,6 @@ def main():
                   sorted(model_counts_trimmed.items()),
                   sorted(input_counts_fixed.items()),
                   chisq,
-                  pval,
                   ddof,
                   args.inf)
 
