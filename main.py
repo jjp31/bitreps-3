@@ -20,7 +20,7 @@ def populate_bloom(blocks, err_rate, blocksize):
     """
     # Prepare intermediary JSON
     reps = {
-        "hits": defaultdict(lambda: 0),
+        "hits": defaultdict(lambda: 1),
         "blocksize": blocksize,
         "err_rate": err_rate,
         "num_blocks": len(blocks)

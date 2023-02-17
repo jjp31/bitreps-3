@@ -1,6 +1,6 @@
 from paths import JSON_DIRECTORY, OUTPUT_DIRECTORY
+from scipy.stats import chisquare
 from collections import Counter
-from scipy.stats import chi2
 from pathlib import Path
 import argparse
 import json
@@ -12,18 +12,17 @@ def write_results(raw_exp_counts, raw_obs_counts, exp_counts, obs_counts, chisq,
     s2 = "Unmodified observed distribution: %s\n\n" % raw_obs_counts
     s3 = "Expected distribution used for chi-square calculation: %s\n" % exp_counts
     s4 = "Observed distribution used for chi-square calculation: %s\n\n" % obs_counts
-    s5 = "Chi-square: %s\n" % chisq
+    s5 = "Chi-square: %s\n" % chisq[0]
+    s6 = "P-Value: %s\n" % chisq[1]
     s7 = "Degrees of Freedom: %s" % ddof
-    lines = [s1, s2, s3, s4, s5, s7]
+    lines = [s1, s2, s3, s4, s5, s6, s7]
     with open(os.path.join(OUTPUT_DIRECTORY, "%s.txt" % Path(fn).stem), "w") as f:
         for line in lines:
             f.write(line)
 
 
 def calc_chisq(obs, exp):
-    chisq = 0
-    for i in range(len(obs)):
-        chisq += ((obs[i] - exp[i]) ** 2) / exp[i]
+    chisq = chisquare(obs, exp)
     return chisq
 
 
@@ -48,9 +47,16 @@ def remove_small_buckets(counts):
 def get_repetition_distribution(data):
     distribution = []
     for k, v in data["hits"].items():
-        distribution.append(v)
+        for i in range(v):
+            distribution.append(v)
     return distribution
 
+
+def add_uniques(data, num_blocks):
+    num_uniques = num_blocks - len(data)
+    for i in range(num_uniques):
+        data.append(1)
+    return data
 
 def read_json(fp):
     with open(fp, "r") as f:
@@ -94,9 +100,13 @@ def main():
     input_distribution = get_repetition_distribution(input_json)
     model_distribution = get_repetition_distribution(model_json)
 
+    # Account for unique blocks
+    input_distribution_full = add_uniques(input_distribution, input_json["num_blocks"])
+    model_distribution_full = add_uniques(model_distribution, input_json["num_blocks"])
+
     # Count elements in input and model repetition counts
-    input_counts = Counter(input_distribution)
-    model_counts = Counter(model_distribution)
+    input_counts = Counter(input_distribution_full)
+    model_counts = Counter(model_distribution_full)
 
     # Remove buckets with less than 5 elements from expected distribution
     model_counts_trimmed = remove_small_buckets(model_counts)
